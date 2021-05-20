@@ -1,12 +1,13 @@
 (function($) {
     'use strict';
 
+    let property_city = "";
     let defaultList = "";
-    let defaultFilter = "venta";
+    let defaultArchiveType = "venta";
     let optionsSelected = new Array();
     let tagsWithTaxonomies = new Array();
 
-    function addOption(option) {
+    function addOption(option, text) {
         if (!optionsSelected.includes(option)) {
             optionsSelected.push(option)
         }
@@ -14,6 +15,8 @@
             let cssClass = '.' + getTermSlug(option);
             $(cssClass).hide();
         }
+        if (!option.includes('ciudad'))
+            showOptionSelected(text, option)
     }
 
     function removeOption(option) {
@@ -27,8 +30,11 @@
             let cssClass = '.' + getTermSlug(option);
             $(cssClass).show();
         }
-        if (!optionsSelected.length)
+        //es menor o igual a 1 porque el array optionsSelected siempre tiene al menos una ciudad
+        if (optionsSelected.length <= 1)
             showItemsDefault();
+        else
+            callWPAjax()
     }
 
     function removeParentesis(text) {
@@ -66,21 +72,7 @@
         $('.listing-view').append(defaultList);
     }
 
-    $(document).ready(function() {
-        defaultList = $('div.item-listing-wrap').clone();
-        defaultFilter = $('h5').data('filtro');
-    })
-
-    $(document).on('click', '.close', function(event) {
-        event.preventDefault();
-        removeOption($(this).data('option'))
-    });
-
-    $(document).on('click', '.filter-options a', function(event) {
-        event.preventDefault();
-        addOption($(this).attr('href'));
-        showOptionSelected($(this).text(), $(this).attr('href'))
-
+    function callWPAjax() {
         $.ajax({
             url: ajaxfilter.ajaxurl,
             type: 'post',
@@ -92,13 +84,71 @@
             beforeSend: function() {
                 $('.listing-view').find('.card').remove();
                 $(document).scrollTop();
-                $('.listing-view').append('p').text("Cargando");
+                $('div.listing-tabs').text('Cargando resultados...')
+                    //$('div.pagination-wrap').empty();
             },
             success: function(response) {
                 $('.listing-view').empty();
                 $('.listing-view').append(response.query);
+                console.log(response.count_posts);
+                if (response.count_posts === undefined || response.count_posts == 0) {
+                    $('div.listing-tabs').hide();
+                    $('div.sort-by').hide();
+                    //$('div.pagination-wrap').hide();
+                } else {
+                    if (response.count_posts > 0) {
+                        $('div.listing-tabs').show();
+                        $('div.sort-by').show();
+                        $('div.pagination-wrap').show();
+                        $('div.pagination-wrap').append(response.paginacion);
+                        if (defaultArchiveType != 'proyecto') {
+                            if (response.count_posts > 1)
+                                $('div.listing-tabs').text(response.count_posts + ' Propiedades')
+                            else
+                                $('div.listing-tabs').text(response.count_posts + ' Propiedad')
+                        } else {
+                            if (response.count_posts > 1)
+                                $('div.listing-tabs').text(response.count_posts + ' Proyectos')
+                            else
+                                $('div.listing-tabs').text(response.count_posts + ' Proyecto')
+                        }
+                    }
+                }
+
             }
         })
+    }
+
+    $(document).ready(function() {
+        let pathname = window.location.pathname;
+        if (pathname.includes('montevideo')) {
+            property_city = "property_city|ciudad-de-montevideo";
+        } else {
+            property_city = "property_city|ciudad-de-punta-del-este";
+        }
+        addOption(property_city, property_city);
+        defaultArchiveType = $('div.advanced-search-module').data('type');
+        defaultList = $('div.item-listing-wrap').clone();
+        let defaultFilter = $('li.filter-default > a');
+        $.each(defaultFilter, function() {
+            addOption($(this).attr('href'), $(this).text());
+        });
+
+    })
+
+    $(document).on('click', '.close', function(event) {
+        event.preventDefault();
+        addOption(property_city, property_city);
+        removeOption($(this).data('option'))
+    });
+
+    $(document).on('click', '.filter-options a', function(event) {
+        event.preventDefault();
+        addOption(property_city, property_city);
+        addOption($(this).attr('href'), $(this).text());
+        console.log(optionsSelected);
+        callWPAjax();
+
     })
 
 

@@ -10,10 +10,10 @@ class Filter{
         self::$propertyTaxonomies = [
             'property_type' => array(),
             'property_status' => array(),
-            'property_feature' => array(),
-            'property_label' => array(),
             'property_city' => array(),
-            'property_area' => array()            
+            'property_area' => array(),                        
+            'property_feature' => array(),
+            'property_label' => array()
         ];
         foreach(self::$propertyTaxonomies as $key => $value){
             self::setTerms($key,get_terms($key, array('hide_empty' => false)));
@@ -27,6 +27,7 @@ class Filter{
     private static function setTerms($keyTaxonomy, $terms){
         foreach($terms as $term){
             $termArr = [
+                'id' => $term->term_id,                
                 'name' => $term->name,
                 'slug' => $term->slug,
                 'count'=> $term->count               
