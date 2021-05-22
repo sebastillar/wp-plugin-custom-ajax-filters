@@ -8,12 +8,12 @@ class Filter{
     public static function init() {
         //$this->propertyTaxonomies = get_taxonomies();        
         self::$propertyTaxonomies = [
+            'property_status' => array(),            
             'property_type' => array(),
-            'property_status' => array(),
             'property_city' => array(),
             'property_area' => array(),                        
-            'property_feature' => array(),
-            'property_label' => array()
+            //'property_feature' => array(),
+            //'property_label' => array()
         ];
         foreach(self::$propertyTaxonomies as $key => $value){
             self::setTerms($key,get_terms($key, array('hide_empty' => false)));

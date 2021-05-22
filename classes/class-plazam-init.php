@@ -21,10 +21,10 @@ class Plazam {
     protected function __construct()
     {   
         add_action( 'init', array( __CLASS__, 'init' ) );
+        add_action( 'wp', array( __CLASS__, 'enqueue_scripts' ) );        
         $this->actions();
         $this->plazam_inc_files();
         $this->filters();
-        self::enqueue_scripts();
 
         //add_action( 'current_screen', array( $this, 'conditional_includes' ) );
     }    
@@ -65,7 +65,7 @@ class Plazam {
      *
     */
     function plazam_inc_files() {
-        require_once(PLAZAM_PLUGIN_PATH . '/shortcodes/section-filters.php');
+       // require_once(PLAZAM_PLUGIN_PATH . '/shortcodes/section-filters.php');
     }
 
     /**
@@ -99,11 +99,14 @@ class Plazam {
         $js_path = 'assets/frontend/js/';
         $css_path = 'assets/frontend/css/';      
 
-        wp_enqueue_style('plazam-frontend-style', PLAZAM_PLUGIN_URL . $css_path . 'style.css', array(), '1.0.0', 'all');
-        wp_enqueue_script( 'plazam-frontend-js',  PLAZAM_PLUGIN_URL . $js_path . 'plazam.js', array( 'jquery' ), '1.0', true );
-
         wp_register_script('ajax-filter',PLAZAM_PLUGIN_URL . $js_path . 'ajax-filter.js',array('jquery'));
-        wp_enqueue_script( 'ajax-filter');        
+
+        if ( is_page( array( 'listado-de-propiedades-en-venta-y-alquiler','listado-de-proyectos-en-uruguay' ) ) ) {
+            wp_enqueue_style('plazam-frontend-style', PLAZAM_PLUGIN_URL . $css_path . 'style.css', array(), '1.0.0', 'all');
+            wp_enqueue_script( 'plazam-frontend-js',  PLAZAM_PLUGIN_URL . $js_path . 'plazam.js', array( 'jquery' ), '1.0', true );            
+            wp_enqueue_script( 'ajax-filter');
+        }        
+
 
         wp_localize_script( 'ajax-filter', 'ajaxfilter', array(
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
@@ -122,6 +125,7 @@ class Plazam {
     {
         $files = apply_filters( 'plazam_class_loader', array(
             PLAZAM_PLUGIN_PATH . '/classes/class-filter.php',
+            PLAZAM_PLUGIN_PATH . '/class-page-templater.php',            
         ) );
 
         foreach ( $files as $file ) {

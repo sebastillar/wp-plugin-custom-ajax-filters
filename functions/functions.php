@@ -1,40 +1,38 @@
 <?php
 
+global $archiveProjectType, $archivePropertyType, $queryStrVenta, $queryStrAlquiler;
+
+$archiveProjectType = 'proyectos';
+$archivePropertyType = 'inmuebles';
+$queryStrVenta = 'venta';
+$queryStrAlquiler = 'alquiler';
+
+
 if( !function_exists('plazam_ajax_filter_properties') ) {
     function plazam_ajax_filter_properties() {
-        $tags = json_decode( stripslashes( $_POST['tags'] ), true );
         $taxo_arr = array();
-        $tax_query = array(
-            'relation' => 'AND', 
-        );
-        foreach($tags as $tag => $value){
-            $tagArr = explode('|', $value);
-            if($taxo_arr[$tagArr[0]]){
-                if(!in_array($tagArr[1],$taxo_arr[$tagArr[0]]))
-                    array_push($taxo_arr[$tagArr[0]],$tagArr[1]);
-            }else{
-                $taxo_arr[$tagArr[0]]=array();
-                array_push($taxo_arr[$tagArr[0]],$tagArr[1]);
-            }
-        }
-    
-        foreach($taxo_arr as $tax => $val){
-            array_push($tax_query,[
-                'taxonomy' => $tax,
-                'field' => 'slug',
-                'terms' => $val,
-                'operator' => 'IN' 
-            ]);
-        }
+        $tax_query = array();
+        $tags = json_decode( stripslashes( $_POST['tags'] ), true );
+        $project_str = stripslashes( $_POST['project_str']);
+        $archive_type = stripslashes( $_POST['archiveType']);
+        $is_project = strpos($archive_type,$archiveProjectType) >= 0 ? true : false;
+        $taxo_arr = createTaxonomyArr($tags);        
+        $tax_query = loadTaxQueryArr($taxo_arr,$is_project);
     
         $args = array(
             'post_type' => array('property'),  
             'post_status' => array('publish'),
-            'posts_per_page' => 2,
+            'posts_per_page' => 10,
             'page' => 1,
+            's' => $project_str,
             'tax_query' => $tax_query        
         );    
-    
+
+        wp_send_json([ 
+            'args' => $tags
+        ]);        
+        die();
+        $paginacion = plazam_pagination($query->max_num_pages);
         $query = new WP_Query( $args );
         $count_posts = $query->found_posts;
     
@@ -52,14 +50,13 @@ if( !function_exists('plazam_ajax_filter_properties') ) {
                 $query->the_post();
                 get_template_part('template-parts/listing/item-v5');
             }
-            $paginacion = plazam_pagination($query->max_num_pages);            
             wp_reset_postdata();
             wp_send_json([ 
                 'query' => ob_get_clean(),
                 'count_posts'  => $count_posts,
-                'paginacion' => $paginacion
-            ]);    
-    
+                'paginacion' => $paginacion,
+                'args' => $args
+            ]);
         }
         wp_die();
     }   
@@ -79,24 +76,20 @@ if( !function_exists('urlGets') ) {
 
 if( !function_exists('getArchiveType') ) {
     function getArchiveType(){
-        $retorno = "alquiler";
-        if(urlGets('proyecto', true) !== false)
-            $retorno = "proyecto";
-        else{
-            if(urlGets('venta', true) !== false)
-                $retorno = "venta";        
-        }
+        global $archiveProjectType, $archivePropertyType;
+        $retorno = $archivePropertyType;
+        if(strpos(get_post_field( 'post_name', $post->slug ),$archiveProjectType))
+            $retorno = $archiveProjectType;
         return $retorno;
     }
 }
 
 if( !function_exists('printDefaultFilters') ) {
     function printDefaultFilters($archiveType, $key, $value){
-        if($key != 'property_city'){
-            echo '<h5 class="'.$key.' mt-3">'. get_taxonomy( $key )->labels->name .'</h5>';
-        }        
-        if( $archiveType != 'proyecto'){
-            echo '<ul class="list-group '.$key.'">';
+        global $archiveProjectType, $archivePropertyType;
+        echo '<h5 class="'.$key.' mt-3">'. get_taxonomy( $key )->labels->name .'</h5>';       
+        echo '<ul class="list-group '.$key.'">';
+        if( $archiveType != $archiveProjectType){
             foreach ($value as $taxonomy => $term) {  
                 if($term['count']){
                     if($key == 'property_type'){
@@ -112,9 +105,9 @@ if( !function_exists('printDefaultFilters') ) {
                     }
                     elseif($key == 'property_status'){
                         if(strpos($term['slug'],'avance') === false){
-                            if(urlGets('venta',true)){
+                            if(get_query_var('operacion') == 'venta'){
                                 if(strpos($term['slug'],'venta') !== false){
-                                    echo '<li class="filter-options filter-default alquiler-venta" ><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';                                            
+                                    echo '<li class="filter-options filter-default alquiler-venta" ><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';                               
                                 }
                                 else{
                                     echo '<li class="filter-options alquiler-venta" ><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';
@@ -130,13 +123,13 @@ if( !function_exists('printDefaultFilters') ) {
                             }
                         }                                                                                  
                     }
-                    elseif($key == 'property_city'){
-                        continue;
-                    }
                     elseif($key == 'property_area'){
+                        echo '<li class="filter-options generico"><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';                        
+                        /*
                         $option_name = '_houzez_property_area_'.$term['id'];
                         if(urlGets(get_option($option_name)['parent_city'],false))
-                            echo '<li class="filter-options generico"><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';                        
+                            echo '<li class="filter-options generico"><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';
+                        */
                     }                    
                     else{
                         echo '<li class="filter-options generico"><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';
@@ -146,8 +139,7 @@ if( !function_exists('printDefaultFilters') ) {
                 <?php  
             }
         }
-        else{                                    
-            echo '<ul class="list-group '.$key.'">';
+        else{
             foreach ($value as $taxonomy => $term) {                 
                 if($term['count']){
                     if($key == 'property_type'){
@@ -170,12 +162,11 @@ if( !function_exists('printDefaultFilters') ) {
                             echo '<li class="filter-options proyecto" ><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';
                         }
                     }
-                    elseif($key == 'property_city'){
-                        continue;
-                    }
                     elseif($key == 'property_area'){
                         $option_name = '_houzez_property_area_'.$term['id'];
-                        if(urlGets(get_option($option_name)['parent_city'],false))
+                        $ciudad = get_option($option_name)['parent_city']; 
+
+                        if(strpos(get_query_var('ciudad'), $ciudad))
                             echo '<li class="filter-options generico"><a href="'.$key.'|'.$term['slug'].'">'.$term['name'].' ('.$term['count'].')</a></li>';                        
                     }                                                              
                     else{
@@ -186,6 +177,7 @@ if( !function_exists('printDefaultFilters') ) {
                 <?php  
             }                                
         }
+        echo '</ul>';
     }
 }
 
@@ -210,7 +202,7 @@ if( !function_exists('printDefaultCityFilter')){
 
 /**
  *   -------------------------------------------------------------
- *   Houzez Pagination
+ *   Plazam Pagination
  *   -------------------------------------------------------------
  */
 if( !function_exists( 'plazam_pagination' ) ){
@@ -301,5 +293,99 @@ if( !function_exists( 'plazam_pagination' ) ){
             return $output;
 
         }
+    }
+}
+
+if(!function_exists('printBuscadorStr')){
+    function printBuscadorStr(){
+        $output = '<div class="flex-search flex-grow-1"><div class="form-group"><div class="search-icon mb-4">';
+        $output .= '<input id="buscador-proyectos" name="keyword" type="text" class="houzez-keyword-autocomplete form-control" value="" placeholder="Ingrese nombre del proyecto">';
+        $output .= '</div></div>';
+        $output .= '<div class="flex-search btn-no-right-padding">';
+        $output .= '<button id="btn-buscador" type="submit" class="btn btn-search btn-secondary btn-full-width ">';$output .= 'Búsqueda';
+        $output .= '</button></div></div>';
+        return $output;
+    }
+}
+
+if(! function_exists('plazamItemMenuQueryStr')){
+    function plazamItemMenuQueryStr( $items, $menu = 'your_menu_slug', $args ) {
+
+        foreach( $items as $item ) {
+    
+            if ( strpos($item->post_title,'ropiedades en Venta'))
+                $item->url = add_query_arg( 'operacion', 'venta', $item->url );
+            elseif(strpos($item->post_title,'ropiedades en Alquiler'))
+                $item->url = add_query_arg( 'operacion', 'alquiler', $item->url );
+            elseif(strpos($item->post_title,'royectos en Montevideo'))
+                $item->url = add_query_arg( 'ciudad', 'proyectos-montevideo', $item->url );
+            elseif(strpos($item->post_title,'royectos en Punta'))
+                $item->url = add_query_arg( 'ciudad', 'proyectos-punta-del-este', $item->url );
+            elseif(strpos($item->post_title,'Vivienda Social'))
+                $item->url = add_query_arg( 'tipo', 'proyectos-vivienda-social', $item->url );                
+        }
+        return $items;
+    }
+}
+add_filter( 'wp_get_nav_menu_items','plazamItemMenuQueryStr', 11, 3 );
+
+if(! function_exists('plazam_register_query_vars')){
+    function plazam_register_query_vars( $vars ) {
+        $vars[] = 'operacion';
+        $vars[] = 'tipo';        
+        $vars[] = 'ciudad';
+        return $vars;
+    }
+    add_filter( 'query_vars', 'plazam_register_query_vars' );
+    
+}
+
+if(!function_exists('createTaxonomyArr')){
+    function createTaxonomyArr($tags){
+        $taxo_arr = array();    
+        foreach($tags as $tag => $value){
+            $tagArr = explode('|', $value);
+            if($taxo_arr[$tagArr[0]]){
+                if(!in_array($tagArr[1],$taxo_arr[$tagArr[0]]))
+                    array_push($taxo_arr[$tagArr[0]],$tagArr[1]);
+            }else{
+                $taxo_arr[$tagArr[0]]=array();
+                array_push($taxo_arr[$tagArr[0]],$tagArr[1]);
+            }
+        }    
+        return $taxo_arr;
+    }
+}
+
+if(!function_exists('loadTaxQueryArr')){
+    function loadTaxQueryArr($taxo_arr, $is_project){
+        $tax_query = array(
+            'relation' => 'AND', 
+        );
+        foreach($taxo_arr as $tax => $val){
+            array_push($tax_query,[
+                'taxonomy' => $tax,
+                'field' => 'slug',
+                'terms' => $val,
+                'operator' => 'IN' 
+            ]);
+        }
+        if(!$is_project){
+            array_push($tax_query,[
+                'taxonomy' => 'property_type',
+                'field' => 'slug',
+                'terms' => 'proyecto',
+                'operator' => 'NOT IN' 
+            ]);
+        }
+        else{
+            array_push($tax_query,[
+                'taxonomy' => 'property_type',
+                'field' => 'slug',
+                'terms' => 'propiedad',
+                'operator' => 'NOT IN' 
+            ]);
+        }
+        return $tax_query;            
     }
 }

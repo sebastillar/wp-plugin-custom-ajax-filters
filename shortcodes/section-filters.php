@@ -5,14 +5,15 @@
 if( !function_exists('plazam_filters') ) {
     function plazam_filters($atts, $content = null)
     {
+        $filters = Filter::getTaxonomies();  
+        $archiveType = getArchiveType();
+
         extract(shortcode_atts(array(
-            'filters_title' => 'Buscando inmuebles'
+            'filters_title' => $archiveType == 'proyectos' ? 'Buscar proyectos' : 'Buscar inmuebles'
         ), $atts));
 
         ob_start();
 
-        $filters = Filter::getTaxonomies();  
-        $archiveType = getArchiveType();
         ?>
         <div class="advanced-search-module" data-type="<?php echo $archiveType ?>">
             <div class="advanced-search-v1">
