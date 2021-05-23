@@ -53,7 +53,6 @@
                 return false;
             }
         }).length;
-        console.log(count)
         return count;
     }
 
@@ -181,8 +180,8 @@
                 console.log(e.responseText)
             },
             success: function(response) {
-                console.log("argumentos")
-                console.log(response)
+                console.log("query")
+                console.log(response.query)
                 $('.listing-view').empty();
                 $('.listing-view').append(response.query);
                 if (response.count_posts === undefined || response.count_posts == 0) {
@@ -213,17 +212,10 @@
         })
     }
 
-    function initSearchStr() {
-        $("#buscador-proyectos").keyup(function() {
-            project_str = $("#buscador-proyectos").val();
-        });
-    }
-
     $(document).ready(function() {
         defaultArchiveType = $('div.advanced-search-module').data('type');
         addCityToFilter();
         addProjectFixedToFilter();
-        initSearchStr();
         defaultList = $('div.item-listing-wrap').clone();
         let defaultFilter = $('li.filter-default > a');
         $.each(defaultFilter, function() {
@@ -238,7 +230,7 @@
 
     $(document).on('click', '#btn-buscador', function(event) {
         event.preventDefault();
-        console.log("request")
+        project_str = $("#buscador-proyectos").val();
         callWPAjax();
     });
 
