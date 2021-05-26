@@ -71,77 +71,54 @@ add_action( 'wp_ajax_nopriv_ajax_filter', 'plazam_ajax_filter_properties' );
 
 
 if( !function_exists('plazam_template_args_query') ) {
-    function plazam_template_args_query($tags,$archive_type,$moneda) {
+    function plazam_template_args_query($tags,$archive_type, $is_featured) {
         global $archiveProjectType;        
         $is_project = (strpos($archive_type,$archiveProjectType) !== false AND strpos($archive_type,$archiveProjectType) >= 0) ? true : false;
 
         $taxo_arr = plazamCreateTaxonomyArr($tags,true);
         $tax_query = plazamLoadTaxQueryArr($taxo_arr,$is_project);
+        $count = count($tax_query);
+        $args = array(
+            'post_type'     => array('property'),  
+            'post_status'   => array('publish'),
+            'posts_per_page'=> 10,
+            'paged'         => 1
+        );
+
+        if($count > 0 ) {
+            $args['tax_query'] = $tax_query;
+        }        
 
         if($is_project){
-            $args = array(
-                'post_type' => array('property'),  
-                'post_status' => array('publish'),
-                'posts_per_page' => 10,
-                'paged' => 1,
-                'tax_query' => $tax_query,
-                'orderby' => array('post_title'),
-                'order' => 'ASC' 
-            );
+            $args['orderby']    = array('date');
+            $args['order']      = 'DESC';
         }
         else{
-            if(plazamIsVenta()){
-                $args = array(
-                    'post_type' => array('property'),  
-                    'post_status' => array('publish'),
-                    'posts_per_page' => 10,
-                    'paged' => 1,
-                    'tax_query' => $tax_query,
-                    
-                    'meta_query' => array(                    
-                        'relation' => 'OR',
-                        'moneda_clause' => array(
-                            'key' => 'fave_currency',
-                            'compare' => 'LIKE',
-                            'value' => $moneda                    
-                        ),                    
-                        'precio_clause' => array(
-                            'key' => 'fave_property_price',
-                            'compare' => 'EXISTS',
-                            'type'      => 'NUMERIC'
-                        )
-                         
-                    ),
-                    'orderby' => array('precio_clause'),                    
-                    'order' => 'ASC'
-                );
-            }
-            else{
-                $args = array(
-                    'post_type' => array('property'),  
-                    'post_status' => array('publish'),
-                    'posts_per_page' => 10,
-                    'paged' => 1,
-                    'tax_query' => $tax_query,
-                    
-                    'meta_query' => array(                    
-                        'relation' => 'OR',
-                        'moneda_clause' => array(
-                            'key' => 'fave_currency',
-                            'compare' => 'LIKE',
-                            'value' => $moneda                    
-                        ),                    
-                        'precio_clause' => array(
-                            'key' => 'fave_property_price',
-                            'compare' => 'LIKE',
-                            'type'      => 'NUMERIC'
-                        )
-                         
-                    ),
-                    'orderby' => array('precio_clause'),                    
-                    'order' => 'ASC'
-                );                 
-            }
+            $meta_query = array(
+                'relation'      =>   'AND',
+                'query_one'     => array(
+                    'key'       => 'fave_currency'
+                ),
+                'query_two' => array(
+                    'key'       => 'fave_property_price',
+                    'type'      => 'NUMERIC',
+                ),
+            );
+            $args['meta_query'] = $meta_query;
+            $args['orderby']    = array(
+                'query_one' => 'ASC',
+                'query_two' => 'ASC',
+            );            
+        }
+
+        if($is_featured){
+            $featured = array(
+                'key'       =>  '',
+                'value'     =>  '1',
+                'types'     =>  'NUMERIC',
+                'compare'   =>  'LIKE'
+            );             
+            array_push($meta_query,$featured);
         }
         return $args;
     }   
@@ -157,8 +134,8 @@ if( !function_exists('plazamGetArchiveType') ) {
     }
 }
 
-if( !function_exists('plazamPrintDefaultFilters') ) {
-    function plazamPrintDefaultFilters($archiveType, $key, $value){
+if( !function_exists('plazamMarkupDefaultFilters') ) {
+    function plazamMarkupDefaultFilters($archiveType, $key, $value){
         global $archiveProjectType, $archivePropertyType;
         $output = "";
         if( $archiveType != $archiveProjectType){
@@ -254,31 +231,61 @@ if( !function_exists('plazamPrintDefaultFilters') ) {
     }
 }
 
-if(!function_exists('plazamPrintPrecios')){
-    function plazamPrintPrecios(){
-        $output .= '<h5 class="mt-3">Precio</h5>';
-        $output .= '<ul class="alquiler-precios nav nav-tabs">';        
-        $output .= '<li class="nav-item alquiler-precio-pesos" role="presentation">';                
-        $output .= '<a id="tab-1" class="nav-link active" aria-current="page" href="#tabs-1" data-toggle="tab" role="tab" aria-controls="tabs-1" aria-selected="true">Pesos</a>';
-        $output .= '<ul>';
-        $output .= '<li><a href="#">Hasta $15.000</a></li>';
-        $output .= '<li><a href="#">$15.000 a $40.000</a></li>';
-        $output .= '<li><a href="#">Más de $40.000</a></li>';
-        $output .= '</ul>';
-        $output .= '</li>';
-        $output .= '</ul>';        
+if(!function_exists('plazamMarkupPrecios')){
+    function plazamMarkupPrecios(){
+        $output = '<div>';
+        $output .= '<h5 class=" mt-3">Precio</h5>';
+        $output .= '<ul class="nav nav-tabs mb-3" id="ex1" role="tablist">';
         $output .= '<li class="nav-item" role="presentation">';
-        $output .= '<a id="tab-2" class="nav-link active" aria-current="page" href="#tabs-2" data-toggle="tab" role="tab" aria-controls="tabs-2" aria-selected="true">Dólares</a>';
+        $output .= '<a class="nav-link active" id="tab-1" data-mdb-toggle="tab" href="#tabs-1" role="tab" aria-controls="tabs-1" aria-selected="true">Pesos</a>';
+        $output .= '</li>';
+        $output .= '<li class="nav-item" role="presentation">';
+        $output .= '<a class="nav-link" id="tab-2" data-mdb-toggle="tab" href="#tabs-2" role="tab" aria-controls="tabs-2" aria-selected="false">Dólares</a>';
+        $output .= '</li>';
+        $output .= '</ul>';
+        $output .= '<div class="tab-content" id="ex1-content">';
+        $output .= '<div class="tab-pane fade show active" id="tabs-1" role="tabpanel" aria-labelledby="tab-1">';
+        $output .= '<ul>';
+        $output .= '<li><a href="#">Hasta 20.000</a></li>';
+        $output .= '<li><a href="#">20.000 a 45.000</a></li>';
+        $output .= '<li><a href="#">Más de 45.000</a></li>';
+        $output .= '</ul>';
+        $output .= '</div>';
+        $output .= '<div class="tab-pane fade" id="tabs-2" role="tabpanel" aria-labelledby="tab-2">';
         $output .= '<ul>';
         $output .= '<li><a href="#">Hasta USD 500</a></li>';
         $output .= '<li><a href="#">USD500 a USD1000</a></li>';
         $output .= '<li><a href="#">Más de USD1000</a></li>';
-        $output .= '</ul>';        
-        $output .= '</li>';
-        $output .= '</ul>';     
-        return $output;
+        $output .= '</ul>';
+        $output .= '</div>';
+        $output .= '</div>';
+        $output .= '</div>';
+        return $output;       
     }
 }
+
+
+
+function plazamMarkupListItemPrecio(){
+    $output = "";
+    $i = 1;
+    foreach($labels as $key => $value){
+        $output .= '<li class="nav-item" role="presentation">';
+        
+            $output .= '<a class="nav-link';
+            $i=1 ? $output .= 'active' : '';
+            $output .= '" id="tab-'.$i.'" data-mdb-toggle="tab" href="#tabs-'.$i.'" role="tab" aria-controls="tabs-'.$i.'" aria-selected="true">'.$key.'</a>';            
+        
+
+        $output .= '</li>';
+        $i++;        
+    }
+    $output .= '<li class="nav-item" role="presentation">';
+$output .= '<a class="nav-link" id="tab-2" data-mdb-toggle="tab" href="#tabs-2" role="tab" aria-controls="tabs-2" aria-selected="false">Dólares</a>';
+ $output .= '</li>';
+}
+
+
 
 /**
  *   -------------------------------------------------------------
@@ -546,21 +553,47 @@ if(!function_exists('plazamIsVenta')){
 
 }
 
-if(!function_exists('plazamMergeQueries')){
-    function plazamMergeQueries(){
-        global $pesos, $dolares;
+if(!function_exists('plazamDefaultQuery')){
+    function plazamDefaultQuery($is_featured){
         $archiveType = plazamGetArchiveType();
         $default_tags = plazamSetDefaultTags();
-        $args_pesos = plazam_template_args_query($default_tags, $archiveType,$pesos);
-        $args_dolares = plazam_template_args_query($default_tags, $archiveType,$dolares);
-        $my_query = new WP_Query( $args_pesos );
-        $related_ids = array_map( function( $v ) {return $v->ID;}, $my_query->posts );
-        $args_dolares['posts_per_page'] = 10 - $my_query->post_count;
-        $args_dolares['post__not_in']   = array_merge( array( $post->ID ), $related_ids );
-        $more_query = new WP_Query( $args_dolares );
-        $my_query->posts = array_merge( $my_query->posts, $more_query->posts );
-        return $my_query;
+        $args = plazam_template_args_query($default_tags, $archiveType, $is_featured);
+        $query = new WP_Query( $args );
+        return $query;
     }    
 }
+
+
+if(!function_exists('plazamSortFeatured')){
+    function plazamSortFeatured(){
+        $args = array(
+            'post_type'     => array('property'),  
+            'post_status'   => array('publish'),
+            'posts_per_page' => -1,
+            'meta_key'      => 'fave_featured',
+            'meta_value'=>'1',
+            'meta_compare' => 'LIKE',
+            'meta_query'    => array(
+                'relation'      => 'AND',
+                'query_one'     => array(
+                    'key'       => 'fave_currency'
+                ),
+                'query_two' => array(
+                    'key'       => 'fave_property_price',
+                    'type'      => 'NUMERIC',
+                ),
+            ),
+            'orderby'    => array(
+                'query_one' => 'ASC',
+                'query_two' => 'ASC',
+            )  
+        );
+        $query = new WP_Query($args);
+        return $query;
+    }
+}
+
+
+
 
 

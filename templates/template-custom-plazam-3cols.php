@@ -61,7 +61,7 @@ $total_listing_found = count( $my_query->posts );
 
 */
 
-$plazam_queries = plazamMergeQueries();
+$plazam_query = plazamDefaultQuery(false);
 
 /*
 
@@ -115,15 +115,18 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                                         echo '<div class="row">';                                
                                         echo '<div class="col-sm-12">';   
                                         
-                                        echo plazamPrintDefaultFilters($archiveType, $key, $value);
+                                        echo plazamMarkupDefaultFilters($archiveType, $key, $value);
 
                                         echo '</ul>';
                                         echo '</div>';
                                         echo '</div>';                                                                                          
                                     }
-                                    echo plazamPrintPrecios();
+
                                 }
+                                echo plazamMarkupPrecios();
                                 ?>
+
+                                
                                 <div>
                             </div>
                         </div>
@@ -161,8 +164,8 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                 <div class="listing-view grid-view card-deck grid-view-3-cols">
                     <?php                
                     //if ( $listings_query->have_posts() ) :
-                    if ( $plazam_queries->have_posts() ) :                    
-                        while ( $plazam_queries->have_posts() ) : $plazam_queries->the_post();
+                    if ( $plazam_query->have_posts() ) :                    
+                        while ( $plazam_query->have_posts() ) : $plazam_query->the_post();
 
                             get_template_part('template-parts/listing/item', 'v1');
 
@@ -174,7 +177,7 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                     ?>   
                 </div><!-- listing-view -->
 
-                <?php houzez_pagination( $listings_query->max_num_pages, $range = 2 ); ?>
+                <?php houzez_pagination( $plazam_query->max_num_pages, $range = 2 ); ?>
                 
             </div><!-- col-lg-12 col-md-12 -->
         </div><!-- row -->
