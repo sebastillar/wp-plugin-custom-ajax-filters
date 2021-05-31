@@ -102,7 +102,30 @@ class Plazam {
         wp_register_script('ajax-filter',PLAZAM_PLUGIN_URL . $js_path . 'ajax-filter.js',array('jquery'));
 
         if ( is_page( array( 'listado-de-propiedades-en-venta-y-alquiler','listado-de-proyectos-en-uruguay' ) ) ) {
+            wp_enqueue_style( 
+                'bootstrap_css', 
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css', 
+                array(), 
+                '5.0.1'
+            );             
             wp_enqueue_style('plazam-frontend-style', PLAZAM_PLUGIN_URL . $css_path . 'style.css', array(), '1.0.0', 'all');
+
+
+            wp_enqueue_script( 
+                'popper_js', 
+                'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js', 
+                array(), 
+                '1.14.3', 
+                true
+            ); 
+            wp_enqueue_script( 
+                'bootstrap_js', 
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js', 
+                array('jquery','popper_js'), 
+                '5.0.1', 
+                true
+            ); 
+
             wp_enqueue_script( 'plazam-frontend-js',  PLAZAM_PLUGIN_URL . $js_path . 'plazam.js', array( 'jquery' ), '1.0', true );            
             wp_enqueue_script( 'ajax-filter');
         }        

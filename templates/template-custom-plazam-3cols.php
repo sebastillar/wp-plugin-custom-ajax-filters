@@ -61,7 +61,11 @@ $total_listing_found = count( $my_query->posts );
 
 */
 
-$plazam_query = plazamDefaultQuery(false);
+$plazam_query ='';
+if(function_exists('plazamDefaultQuery')){
+    $plazam_query = plazamDefaultQuery();    
+}
+
 
 /*
 
@@ -115,19 +119,55 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                                         echo '<div class="row">';                                
                                         echo '<div class="col-sm-12">';   
                                         
-                                        echo plazamMarkupDefaultFilters($archiveType, $key, $value);
+                                        if(function_exists('plazamMarkupDefaultFilters')){
+                                            echo plazamMarkupDefaultFilters($archiveType, $key, $value);
+                                        }
 
-                                        echo '</ul>';
                                         echo '</div>';
                                         echo '</div>';                                                                                          
                                     }
 
                                 }
-                                echo plazamMarkupPrecios();
+                                /*
+                                if(function_exists('plazamMarkupPrecios')){
+                                    echo plazamMarkupPrecios();
+                                }
+                                */
                                 ?>
 
-                                
                                 <div>
+                                    <h5 class=" mt-3">Precio</h5>
+                                    <!-- Nav tabs -->
+                                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                      <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab-pesos" type="button" role="tab" aria-controls="home" aria-selected="true">Pesos</button>
+                                      </li>
+                                      <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#tab-dolares" type="button" role="tab" aria-controls="profile" aria-selected="false">Dólares</button>
+                                      </li>
+                                    </ul>
+
+                                    <!-- Tab panes -->
+                                    <div class="tab-content">
+                                        <div class="tab-pane active fade" id="tab-pesos" role="tabpanel" aria-labelledby="home-tab">
+                                            <ul>
+                                                <li><a href="#">Hasta 20.000</a></li>
+                                                <li><a href="#">20.000 a 45.000</a></li>
+                                                <li><a href="#">Más de 45.000</a></li>                                             
+                                            </ul>                                          
+                                        </div>
+                                        <div class="tab-pane fade" id="tab-dolares" role="tabpanel" aria-labelledby="profile-tab">
+                                            <ul>
+                                                <li><a href="#">Hasta USD 500</a></li>
+                                                <li><a href="#">USD500 a USD1000</a></li>
+                                                <li><a href="#">Más de USD1000</a></li>                                             
+                                            </ul>                                          
+                                        </div>
+                                    </div>
+
+                                </div>
+                                
+
                             </div>
                         </div>
                     </div>
@@ -138,6 +178,7 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
             <div class="col-lg-8 col-md-8"> 
                 <?php
                 if( $archiveType == $archiveProjectType){
+                    if(function_exists('plazamPrintBuscadorStr'))
                     echo plazamPrintBuscadorStr();
                 }
 
