@@ -17,6 +17,7 @@ $archiveType = plazamGetArchiveType();
 $titulo = $archiveType == 'proyectos' ? 'Filtrar proyectos' : 'Filtrar inmuebles';
 /*-----*/
 
+
 $is_sticky = '';
 $sticky_sidebar = houzez_option('sticky_sidebar');
 
@@ -135,11 +136,11 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                                 */
                                 ?>
 
-                                <div>
+                                <div id="precio">
                                     <h5 class=" mt-3">Precio</h5>
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs" id="myTab" role="tablist">
-                                      <li class="nav-item" role="presentation">
+                                      <li class="nav-item alquiler" role="presentation">
                                         <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab-pesos" type="button" role="tab" aria-controls="home" aria-selected="true">Pesos</button>
                                       </li>
                                       <li class="nav-item" role="presentation">
@@ -150,18 +151,23 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                                     <!-- Tab panes -->
                                     <div class="tab-content">
                                         <div class="tab-pane active fade" id="tab-pesos" role="tabpanel" aria-labelledby="home-tab">
-                                            <ul>
-                                                <li><a href="#">Hasta 20.000</a></li>
-                                                <li><a href="#">20.000 a 45.000</a></li>
-                                                <li><a href="#">Más de 45.000</a></li>                                             
+                                            <ul class="alquiler">
+                                                <li class="filter-options"><a class="pesos" href="#" data-price="0-20000" data-currency="$U">Hasta $20.000</a></li>
+                                                <li class="filter-options"><a class="pesos" href="#" data-price="20001-45000" data-currency="$U">$20.001 a $45.000</a></li>
+                                                <li class="filter-options"><a class="pesos" href="#" data-price="45001-999999" data-currency="$U">Más de $45.000</a></li>                                             
                                             </ul>                                          
                                         </div>
                                         <div class="tab-pane fade" id="tab-dolares" role="tabpanel" aria-labelledby="profile-tab">
-                                            <ul>
-                                                <li><a href="#">Hasta USD 500</a></li>
-                                                <li><a href="#">USD500 a USD1000</a></li>
-                                                <li><a href="#">Más de USD1000</a></li>                                             
-                                            </ul>                                          
+                                            <ul class="alquiler">
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="0-500" data-currency="USD">Hasta USD500</a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="501-1000" data-currency="USD">USD501 a USD1.000</a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="1001-999999" data-currency="USD">Más de USD1.000</a></li>                                             
+                                            </ul>
+                                            <ul class="venta">
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="0-100000" data-currency="USD">Hasta USD100.000</a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="100000-250000" data-currency="USD">USD100.001  a USD250.000</a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="250000-9999999" data-currency="USD">Más de USD250.000</a></li>                                             
+                                            </ul>                                            
                                         </div>
                                     </div>
 
@@ -203,6 +209,7 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                 </div><!-- listing-tools-wrap -->   
 
                 <div class="listing-view grid-view card-deck grid-view-3-cols">
+                    <div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>
                     <?php                
                     //if ( $listings_query->have_posts() ) :
                     if ( $plazam_query->have_posts() ) :                    
