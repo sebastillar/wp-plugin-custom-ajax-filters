@@ -93,6 +93,14 @@ class Plazam {
      */
     public function init() {
         $filtro = Filter::init();
+
+        $serializer = new Serializer();
+        $serializer->init();
+
+        $deserializer = new Deserializer();       
+
+        $menu = new Submenu( new Submenu_Page($deserializer) );
+        $menu->init();
     }    
 
     public static function enqueue_scripts() {
@@ -148,7 +156,11 @@ class Plazam {
     {
         $files = apply_filters( 'plazam_class_loader', array(
             PLAZAM_PLUGIN_PATH . '/classes/class-filter.php',
-            PLAZAM_PLUGIN_PATH . '/class-page-templater.php',            
+            PLAZAM_PLUGIN_PATH . '/class-page-templater.php',    
+            PLAZAM_PLUGIN_PATH . '/classes/class-submenu.php',
+            PLAZAM_PLUGIN_PATH . '/classes/class-submenu-page.php',
+            PLAZAM_PLUGIN_PATH . '/classes/class-serializer.php',
+            PLAZAM_PLUGIN_PATH . '/classes/class-deserializer.php'
         ) );
 
         foreach ( $files as $file ) {

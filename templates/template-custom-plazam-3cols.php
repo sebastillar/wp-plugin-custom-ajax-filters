@@ -13,7 +13,7 @@ Plazam Custom Vars
 */
 /*-----*/
 $filters = Filter::getTaxonomies();  
-$archiveType = plazamGetArchiveType();
+$archiveType = plazam_get_archive_type();
 $titulo = $archiveType == 'proyectos' ? 'Filtrar proyectos' : 'Filtrar inmuebles';
 /*-----*/
 
@@ -28,47 +28,21 @@ if( $sticky_sidebar['property_listings'] != 0 ) {
 
 $page_content_position = houzez_get_listing_data('listing_page_content_area');
 
+$listing_args = array();
+
+$plazam_query ='';
+if(function_exists('plazam_default_query')){
+    $plazam_query = plazam_default_query();    
+}
+
+
 /*
 $listing_args = array(
     'post_type' => 'property',
     'post_status' => 'publish'
 );
 $listing_args = apply_filters( 'houzez20_property_filter', $listing_args );
-$listing_args = houzez_prop_sort ( $listing_args );
-*/
-
-
-
-$listing_args = array();
-
-/*
-echo "<pre>";
-print_r($args_pesos);
-echo "</pre>";
-
-echo "<pre>";
-print_r($args_dolares);
-echo "</pre>";
-
-$args_pesos = plazam_template_args_query($default_tags, $archiveType,$pesos);
-$args_dolares = plazam_template_args_query($default_tags, $archiveType,$dolares);
-$my_query = new WP_Query( $args_pesos );
-$related_ids = array_map( function( $v ) {return $v->ID;}, $my_query->posts );
-$args_dolares['posts_per_page'] = 10 - $my_query->post_count;
-$args_dolares['post__not_in']   = array_merge( array( $post->ID ), $related_ids ));
-$more_query = new WP_Query( $args_dolares );
-$my_query->posts = array_merge( $my_query->posts, $more_query->posts );
-$total_listing_found = count( $my_query->posts );
-
-*/
-
-$plazam_query ='';
-if(function_exists('plazamDefaultQuery')){
-    $plazam_query = plazamDefaultQuery();    
-}
-
-
-/*
+$listing_args = houzez_prop_sort ( $listing_args ); 
 
 $listings_query = new WP_Query( $listing_args );
 $total_listing_found = $listings_query->found_posts;
@@ -120,8 +94,8 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                                         echo '<div class="row">';                                
                                         echo '<div class="col-sm-12">';   
                                         
-                                        if(function_exists('plazamMarkupDefaultFilters')){
-                                            echo plazamMarkupDefaultFilters($archiveType, $key, $value);
+                                        if(function_exists('plazam_markup_default_filters')){
+                                            echo plazam_markup_default_filters($archiveType, $key, $value);
                                         }
 
                                         echo '</div>';
@@ -137,14 +111,14 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                                 ?>
 
                                 <div id="precio">
-                                    <h5 class=" mt-3">Precio</h5>
+                                    <h5 class=" mt-3"><?php echo __('Precio','houzez') ?></h5>
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                                       <li class="nav-item alquiler" role="presentation">
-                                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab-pesos" type="button" role="tab" aria-controls="home" aria-selected="true">Pesos</button>
+                                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab-pesos" type="button" role="tab" aria-controls="home" aria-selected="true"><?php echo __('Pesos','houzez') ?></button>
                                       </li>
                                       <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#tab-dolares" type="button" role="tab" aria-controls="profile" aria-selected="false">Dólares</button>
+                                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#tab-dolares" type="button" role="tab" aria-controls="profile" aria-selected="false"><?php echo __('Dólares','houzez') ?></button>
                                       </li>
                                     </ul>
 
@@ -152,21 +126,21 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                                     <div class="tab-content">
                                         <div class="tab-pane active fade" id="tab-pesos" role="tabpanel" aria-labelledby="home-tab">
                                             <ul class="alquiler">
-                                                <li class="filter-options"><a class="pesos" href="#" data-price="0-20000" data-currency="$U">Hasta $20.000</a></li>
-                                                <li class="filter-options"><a class="pesos" href="#" data-price="20001-45000" data-currency="$U">$20.001 a $45.000</a></li>
-                                                <li class="filter-options"><a class="pesos" href="#" data-price="45001-999999" data-currency="$U">Más de $45.000</a></li>                                             
+                                                <li class="filter-options"><a class="pesos" href="#" data-price="0-20000" data-currency="$U"> <?php echo __('Hasta $20.000','houzez') ?></a></li>
+                                                <li class="filter-options"><a class="pesos" href="#" data-price="20001-45000" data-currency="$U"> <?php echo __('$20.001 a $45.000','houzez') ?></a></li>
+                                                <li class="filter-options"><a class="pesos" href="#" data-price="45001-999999" data-currency="$U"><?php echo __('Más de $45.000','houzez') ?></a></li>                                             
                                             </ul>                                          
                                         </div>
                                         <div class="tab-pane fade" id="tab-dolares" role="tabpanel" aria-labelledby="profile-tab">
                                             <ul class="alquiler">
-                                                <li class="filter-options"><a class="dolares" href="#" data-price="0-500" data-currency="USD">Hasta USD500</a></li>
-                                                <li class="filter-options"><a class="dolares" href="#" data-price="501-1000" data-currency="USD">USD501 a USD1.000</a></li>
-                                                <li class="filter-options"><a class="dolares" href="#" data-price="1001-999999" data-currency="USD">Más de USD1.000</a></li>                                             
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="0-500" data-currency="USD"><?php echo __('Hasta USD500','houzez') ?></a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="501-1000" data-currency="USD"><?php echo __('USD501 a USD1.000','houzez') ?></a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="1001-999999" data-currency="USD"><?php echo __('Más de USD1.000','houzez') ?></a></li>                                             
                                             </ul>
                                             <ul class="venta">
-                                                <li class="filter-options"><a class="dolares" href="#" data-price="0-100000" data-currency="USD">Hasta USD100.000</a></li>
-                                                <li class="filter-options"><a class="dolares" href="#" data-price="100000-250000" data-currency="USD">USD100.001  a USD250.000</a></li>
-                                                <li class="filter-options"><a class="dolares" href="#" data-price="250000-9999999" data-currency="USD">Más de USD250.000</a></li>                                             
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="0-100000" data-currency="USD"><?php echo __('Hasta USD100.000','houzez') ?></a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="100000-250000" data-currency="USD"><?php echo __('USD100.001  a USD250.000','houzez') ?></a></li>
+                                                <li class="filter-options"><a class="dolares" href="#" data-price="250000-9999999" data-currency="USD"><?php echo __('Más de USD250.000','houzez') ?></a></li>                                             
                                             </ul>                                            
                                         </div>
                                     </div>
@@ -183,10 +157,8 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
             </div><!-- bt-sidebar-wrap -->        
             <div class="col-lg-8 col-md-8"> 
                 <?php
-                if( $archiveType == $archiveProjectType){
-                    if(function_exists('plazamPrintBuscadorStr'))
-                    echo plazamPrintBuscadorStr();
-                }
+                
+                echo plazam_print_buscador_str($archiveType);                
 
                 if ( $page_content_position !== '1' ) {
                     if ( have_posts() ) {
@@ -204,7 +176,7 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                 <div class="listing-tools-wrap">
                     <div class="d-flex align-items-center <?php echo esc_attr($mb); ?>">
                         <?php //get_template_part('template-parts/listing/listing-tabs'); ?>    
-                        <?php get_template_part('template-parts/listing/listing-sort-by'); ?>   
+                        <?php //get_template_part('template-parts/listing/listing-sort-by'); ?>   
                     </div><!-- d-flex -->
                 </div><!-- listing-tools-wrap -->   
 
@@ -225,7 +197,10 @@ if(get_post_meta( $post->ID, 'fave_listings_tabs', true ) != 'enable'){
                     ?>   
                 </div><!-- listing-view -->
 
-                <?php houzez_pagination( $plazam_query->max_num_pages, $range = 2 ); ?>
+                <?php 
+                    //houzez_pagination( $plazam_query->max_num_pages, $range = 2 );
+                    echo plazam_pagination($plazam_query->max_num_pages);
+                ?>
                 
             </div><!-- col-lg-12 col-md-12 -->
         </div><!-- row -->

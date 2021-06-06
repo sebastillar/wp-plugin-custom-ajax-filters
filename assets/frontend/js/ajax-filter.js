@@ -2,6 +2,12 @@
     'use strict';
 
 const location = window.location.href;
+const isProject = () => {
+    if(defaultArchiveType.includes('proyectos'))
+        return true
+    else
+        return false
+};
 const urlParams = new URLSearchParams(window.location.search);
 const projectSlug = "proyecto"
 const propertyCity = "property_city|ciudad-de-";
@@ -16,7 +22,8 @@ var defaultArchiveType = "";
 var optionsSelected = new Array();
 var preciosArr = new Array();
 var currency = "";
-var project_str = "";    
+var project_str = ""; 
+
 
 
 function addOption(optionObj) {
@@ -133,7 +140,7 @@ function removeOption(optionObj) {
             }
         })
     }
-    addProjectFixedToFilter();
+    //addProjectFixedToFilter();
     if('moneda' in optionObj){
         preciosArr = new Array()
         currency = ''
@@ -289,13 +296,14 @@ function callWPAjax() {
             tags: JSON.stringify(optionsSelected),
             prices:JSON.stringify(preciosArr), 
             project_str: project_str,
-            currency: currency
+            currency: currency,
+            is_project: isProject
         },
         beforeSend: function() {
             $('.listing-view').find('.card').remove();
             $(document).scrollTop();
             $('.spinner-border').show();
-            $('div.pagination-wrap').empty();
+            //$('div.pagination-wrap').empty();
         },
         error: function(e) {
             console.log("error")
@@ -314,7 +322,7 @@ function callWPAjax() {
         $('.spinner-border').hide();
         defaultArchiveType = $('div.advanced-search-module').data('type');
         addCityToFilter();
-        addProjectFixedToFilter();
+        //addProjectFixedToFilter();
         defaultList = $('div.item-listing-wrap').clone();
         let defaultFilter = $('li.filter-default > a');
         loadOptionsDefault(defaultFilter);
